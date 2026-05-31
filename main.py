@@ -7,45 +7,77 @@ from PIL import Image
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "ሰላም! እንኳን ወደ መታወቂያ መለወጫ (Convertor) ቦት በሰላም መጡ።\n"
-        "እባክዎ መጀመሪያ መታወቂያ 1 እና መታወቂያ 2ን ይላኩManager"
+        "እባክዎ ለመቀየር የሚፈልጉትን መታወቂያ ፎቶ ይላኩ።"
     )
 
-# 2. ፎቶ ሲላክለት የሚቀበልበት እና ፕሮሰስ የሚያደርግበት ቦታ
+# 2. ፎቶ ሲላክለት በትክክል ቆርጦ Template B ላይ የሚለጥፈው ሎጂክ
 async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ፎቶው ደርሶኛል! በመቀየር ላይ ነው፣ እባክዎ ትንሽ ይጠብቁ...")
+    await update.message.reply_text("መታወቂያው ደርሶኛል! መረጃዎችን ወደ አዲሱ Template በመቀየር ላይ ነው...")
     
-    # ፎቶውን ማውረድ
-    photo_file = await update.message.photo[-1].get_file()
     input_path = f"user_{update.message.chat_id}.jpg"
-    await photo_file.download_to_drive(input_path)
+    output_path = f"converted_{update.message.chat_id}.jpg"
+    template_b_path = "template_b.jpg" # GitHub ላይ የጫንከው ባዶ መታወቂያ
     
-    output_path_3 = f"converted_3_{update.message.chat_id}.jpg"
-    output_path_4 = f"converted_4_{update.message.chat_id}.jpg"
-    
-    # የ Pillow logic
-    img = Image.open(input_path)
-    img.save(output_path_3)
-    img.save(output_path_4)
-
-    # የተዘጋጁትን አዳዲስ መታወቂያዎች መለስክ መላክ
-    await update.message.reply_photo(photo=open(output_path_3, 'rb'), caption="ይህ 3ኛው መታወቂያ ነው")
-    await update.message.reply_photo(photo=open(output_path_4, 'rb'), caption="ይህ 4ኛው መታወቂያ ነው")
-
-    # ጊዜያዊ ፋይሎችን ማጽዳት
-    os.remove(input_path)
-    os.remove(output_path_3)
-    os.remove(output_path_4)
+    try:
+        # ፎቶውን ማውረድ
+        photo_file = await update.message.photo[-1].get_file()
+        await photo_file.download_to_drive(input_path)
+        
+        # 1. የተላከውን መታወቂያ (Template A) እና ባዶውን (Template B) መክፈት
+        img_a = Image.open(input_path).convert("RGBA")
+        
+        if not os.path.exists(template_b_path):
+            await update.message.reply_text("ስህተት: template_b.jpg ፋይል GitHub ላይ አልተገኘም!")
+            return
+            
+        img_b = Image.open(template_b_path).convert("RGBA")
+        
+        # 2. ናሙና የቁረጥ እና የመለጠፍ ሎጂክ (Crop & Paste)
+        # (ይህንን ቁጥር እንደ መታወቂያህ ቅርጽና መጠን ወደፊት እናስተካክለዋለን)
+        # (left, upper, right, lower)
+        
+        # ለምሳሌ የግለሰቡን ፎቶ ያለበትን ቦታ ቆርጦ ማውጣት
+        passport_photo_box = (50, 100, 250, 350) 
+        cropped_photo = img_a.crop(passport_photo_box)
+        
+        # የተቆረጠውን ፎቶ አዲሱ መታወቂያ (Template B) ላይ መለጠፍ
+        # (X, Y) መነሻ ቦታዎች
+        img_b.paste(cropped_photo, (60, 110), cropped_photo)
+        
+        # የጽሑፍ መረጃዎችንም በተመሳሳይ ሁኔታ ቆርጦ መለጠፍ ይቻላል
+        info_box = (260, 100, 700, 450)
+        cropped_info = img_a.crop(info_box)
+        img_b.paste(cropped_info, (280, 110), cropped_info)
+        
+        # የመጨረሻውን ውጤት ሴቭ ማድረግ
+        final_img = img_b.convert("RGB")
+        final_img.save(output_path, "JPEG")
+        
+        # የተዘጋጀውን አዲሱን መታወቂያ መለስክ መላክ
+        await update.message.reply_photo(
+            photo=open(output_path, 'rb'), 
+            caption="🎉 እንኳን ደስ አለዎት! መረጃው ወደ አዲሱ Template ተዛውሮ ተዘጋጅቷል።"
+        )
+        
+    except Exception as e:
+        await update.message.reply_text(f"ኮዱን ሲያሰናዳ ስህተት አጋጥሟል: {str(e)}")
+        
+    finally:
+        # ጊዜያዊ ፋይሎችን ማጽዳት
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        if os.path.exists(output_path):
+            os.remove(output_path)
 
 def main():
     TOKEN = "8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE"
     
-    # የሬንደርን የኔትወርክ መቆራረጥ ለመከላከል ጊዜውን አራዝመነዋል (Timeout ማስተካከያ)
     app = Application.builder().token(TOKEN).read_timeout(30).connect_timeout(30).build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.PHOTO, handle_image))
     
-    print("ቦቱ ስራ ጀምሯል...")
+    print("ቦቱ በስኬት ስራ ጀምሯል...")
     app.run_polling(allowed_updates=[Update.MESSAGE])
 
 if __name__ == '__main__':
