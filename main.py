@@ -7,7 +7,7 @@ from PIL import Image
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "ሰላም! እንኳን ወደ መታወቂያ መለወጫ (Convertor) ቦት በሰላም መጡ።\n"
-        "እባክዎ መጀመሪያ መታወቂያ 1 እና መታወቂያ 2ን ይላኩ።"
+        "እባክዎ መጀመሪያ መታወቂያ 1 እና መታወቂያ 2ን ይላኩManager"
     )
 
 # 2. ፎቶ ሲላክለት የሚቀበልበት እና ፕሮሰስ የሚያደርግበት ቦታ
@@ -39,14 +39,13 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
 def main():
     TOKEN = "8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE"
     
-    # እዚህ ጋር ቦቱ ሁሉንም አይነት መልእክቶች እንዲቀበል አዘነዋል
-    app = Application.builder().token(TOKEN).build()
+    # የሬንደርን የኔትወርክ መቆራረጥ ለመከላከል ጊዜውን አራዝመነዋል (Timeout ማስተካከያ)
+    app = Application.builder().token(TOKEN).read_timeout(30).connect_timeout(30).build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.PHOTO, handle_image))
     
     print("ቦቱ ስራ ጀምሯል...")
-    # allowed_updates=[Update.MESSAGE] የሚለው ቦቱ መልእክቶችን በግድ እንዲያነብ ያደርገዋል
     app.run_polling(allowed_updates=[Update.MESSAGE])
 
 if __name__ == '__main__':
