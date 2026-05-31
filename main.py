@@ -19,16 +19,13 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     input_path = f"user_{update.message.chat_id}.jpg"
     await photo_file.download_to_drive(input_path)
     
-    # እዚህ ጋ የ Conversion (የመቀየር) ሎጂክ ይገባል
-    # ለምሳሌ: easyocr እና Pillow በመጠቀም Template Aን ወደ Template B መቀየር
-    
     output_path_3 = f"converted_3_{update.message.chat_id}.jpg"
     output_path_4 = f"converted_4_{update.message.chat_id}.jpg"
     
-    # ለጊዜው የመነሻ ማሳያ (ይህ በራስህ የ Pillow logic ይተካል)
+    # የ Pillow logic
     img = Image.open(input_path)
-    img.save(output_path_3) # ናሙና
-    img.save(output_path_4) # ናሙና
+    img.save(output_path_3)
+    img.save(output_path_4)
 
     # የተዘጋጁትን አዳዲስ መታወቂያዎች መለስክ መላክ
     await update.message.reply_photo(photo=open(output_path_3, 'rb'), caption="ይህ 3ኛው መታወቂያ ነው")
@@ -40,15 +37,17 @@ async def handle_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     os.remove(output_path_4)
 
 def main():
-8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE"
+    TOKEN = "8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE"
     
+    # እዚህ ጋር ቦቱ ሁሉንም አይነት መልእክቶች እንዲቀበል አዘነዋል
     app = Application.builder().token(TOKEN).build()
     
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.PHOTO, handle_image))
     
     print("ቦቱ ስራ ጀምሯል...")
-    app.run_polling()
+    # allowed_updates=[Update.MESSAGE] የሚለው ቦቱ መልእክቶችን በግድ እንዲያነብ ያደርገዋል
+    app.run_polling(allowed_updates=[Update.MESSAGE])
 
 if __name__ == '__main__':
     main()
