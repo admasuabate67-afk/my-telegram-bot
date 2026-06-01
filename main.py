@@ -3,10 +3,8 @@ from flask import Flask
 import telebot
 from threading import Thread
 
-# 1. የቦት ቶክን ማዋቀር (ደህንነቱ የተጠበቀ መንገድ)
-# ማሳሰቢያ፡ ቶክኑን Render ላይ በ Environment Variable 'BOT_TOKEN' መስጠት ትችላለህ
-# ካልሆነ ግን ከታች ባለው '7917849176...' ምትክ የራስህን ሙሉ ቶክን መተካት ትችላለህ
-BOT_TOKEN = os.environ.get('BOT_TOKEN', '7917849176:AAH6YfXor3Vq27eQ0fv6')
+# 1. ያመጣኸው ትክክለኛ የቦት ቶክን እዚህ ገብቷል
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE')
 bot = telebot.TeleBot(BOT_TOKEN)
 
 # 2. ለ Render የሚሆን ቀላል የ Flask ዌብ ሰርቨር መፍጠር
@@ -34,6 +32,11 @@ def echo_all(message):
 if __name__ == "__main__":
     # የ Flask ሰርቨሩን ከበስተጀርባ (Background Thread) ማስነሳት
     t = Thread(target=run_flask)
+    t.start()
+    
+    print("ቦቱ እየጀመረ ነው...")
+    # ቦቱ መልዕክቶችን ሳያቋርጥ እንዲቀበል ማድረግ
+    bot.infinity_polling()
     t.start()
     
     print("ቦቱ እየጀመረ ነው...")
