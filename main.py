@@ -132,3 +132,62 @@ if __name__ == "__main__":
     t.start()
     print("ቦቱ እየጀመረ ነው...")
     bot.infinity_polling()
+        
+        # --- ሳጥን 6፦ የ FAN የባርኮድ ቁጥር ---
+        barcode_crop = img_a[1215:1330, 300:750]
+        barcode_resized = cv2.resize(barcode_crop, (280, 95)) 
+        img_b[765:860, 550:830] = barcode_resized
+        
+        # --- ሳጥን 7፦ በጎን በኩል ያለውን የቅጥያ ቀን ማዞር ---
+        date_side_crop = img_a[330:1100, 880:960]
+        date_rotated = cv2.rotate(date_side_crop, cv2.ROTATE_90_COUNTERCLOCKWISE)
+        date_side_resized = cv2.resize(date_rotated, (550, 45)) 
+        img_b[70:115, 100:650] = date_side_resized
+        
+        final_preview = Image.fromarray(cv2.cvtColor(img_b, cv2.COLOR_BGR2RGB))
+        return final_preview
+        
+    except Exception as e:
+        print(f"የምስል ሂደት ስህተት፦ {e}")
+        return None
+
+# 4. የቦቱ መልዕክት መቀበያ (Photo Handler)
+@bot.message_handler(content_types=['photo'])
+def handle_id_photo(message):
+    try:
+        chat_id = message.chat.id
+        bot.send_message(chat_id, "⏳ የTemplate A መታወቂያ መረጃዎችን ወደ Template B በመቀየር ላይ ነኝ... እባክዎ ይጠብቁ።")
+        
+        file_info = bot.get_file(message.photo[-1].file_id)
+        downloaded_file = bot.download_file(file_info.file_path)
+        
+        input_filename = f"input_{chat_id}.jpg"
+        with open(input_filename, 'wb') as f:
+            f.write(downloaded_file)
+        
+        output_image = process_id_conversion(input_filename)
+        
+        if output_image is not None:
+            bio = io.BytesIO()
+            output_image.save(bio, format='JPEG', quality=95)
+            bio.seek(0)
+            bot.send_photo(chat_id, bio, caption="✅ መታወቂያው በተሳካ ሁኔታ ወደ Template B ተቀይሯል!")
+        else:
+            bot.send_message(chat_id, "❌ ይቅርታ፣ መታወቂያውን መቀየር አልተቻለም። የTemplate B ፋይልን ማግኘት አልተቻለም።")
+            
+        if os.path.exists(input_filename):
+            os.remove(input_filename)
+            
+    except Exception as e:
+        print(f"ስህተት፦ {e}")
+        bot.send_message(message.chat.id, "❌ የቴክኒክ ስህተት አጋጥሟል።")
+
+@bot.message_handler(commands=['start'])
+def send_welcome(message):
+    bot.reply_to(message, "ሰላም! የ Template A ዲጂታል መታወቂያ ፎቶ ይላኩና ወደ Template B ቀይሬ እሰጥዎታለሁ።")
+
+if __name__ == "__main__":
+    t = Thread(target=run_flask)
+    t.start()
+    print("ቦቱ እየጀመረ ነው...")
+    bot.infinity_polling()
