@@ -1,83 +1,91 @@
-import os
-import cv2
-import numpy as np
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from PIL import Image
 
-# የቦት ማረጋገጫ ቁጥር (Bot Token)
-TOKEN = "8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE" # ማስታወሻ፦ እውነተኛውን ቶክንዎን እዚህ ያስገቡ
-
-# የባዶ መታወቂያ ምስል መንገድ
-TEMPLATE_B_PATH = "template_b.jpg"
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "ሰላም! የ Template A ዲጂታል መታወቂያ ፎቶ ይላኩና ወደ Template B ቀይሬ እሰጥዎታለሁ።"
-    )
-
-async def process_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # የሂደት ማረጋገጫ መልዕክት
-    status_message = await update.message.reply_text(
-        "⏳ የTemplate A መታወቂያ መረጃዎችን ወደ Template B በመቀየር ላይ ነኝ... እባክዎ ይጠብቁ..."
-    )
-    
-    input_image_path = "input_user_id.jpg"
-    output_path = "output_template_b.jpg"
-
+def process_digital_id(template_a_path, template_b_path, output_path):
+    # 1. ቴምፕሌቶችን ይክፈቱ
     try:
-        # 1. ፎቶውን ከቴሌግራም ማውረድ
-        photo_file = await update.message.photo[-1].get_file()
-        await photo_file.download_to_drive(input_image_path)
+        id_template_a = Image.open(template_a_path) # input ID
+        new_template_b = Image.open(template_b_path) # empty new template
+    except FileNotFoundError:
+        print("ስህተት: የቴምፕሌት ፋይሎች አልተገኙም::")
+        return
 
-        # 2. ምስሎችን በ OpenCV ማንበብ
-        img_a = cv2.imread(input_image_path)
-        template_b = cv2.imread(TEMPLATE_B_PATH)
+    # ------------------------------------------------------------------
+    # Step 1: መረጃን ከ Template A ይቁረጡ (CROPPING)
+    # ማሳሰቢያ፡ እነዚህ ቁጥሮች በሙከራ የተገኙ ትክክለኛ ቦታዎች ናቸው::
+    # (left, top, right, bottom)
+    # ------------------------------------------------------------------
 
-        if template_b is None:
-            await status_message.edit_text(
-                "❌ ይቅርታ፤ መታወቂያውን መቀየር አልተቻለም። template_b.jpg ፋይል በGitHub ላይ በትክክል መጫኑን ያረጋግጡ።"
-            )
-            return
+    # ሀ. ፎቶውን መቁረጥ (ሳጥን 1 - ለፎቶው)
+    photo_box = (325, 316, 786, 584)
+    extracted_photo = id_template_a.crop(photo_box)
 
-        # 3. ባርኮድ መቁረጥ (እንደ መጀመሪያው ኮድዎ መጋጠሚያ)
-        # ማስታወሻ፦ የቁረጥ ቦታዎችን (Coordinates) እንደ አስፈላጊነቱ ማስተካከል ይችላሉ
-        barcode_crop = img_a[1215:1330, 300:700]
-        bh, bw, _ = barcode_crop.shape
+    # ለ. ስም መቁረጥ (ሳጥን 2 - ሙሉ ስም)
+    name_box = (175, 608, 680, 660)
+    extracted_name = id_template_a.crop(name_box)
 
-        # 4. የተቆረጠውን ባርኮድ በ Template B ላይ ማሳረፍ
-        template_b[800:800+bh, 400:400+bw] = barcode_crop
+    # ሐ. ጾታ መቁረጥ (ሳጥን 4 - ጾታ)
+    sex_box = (175, 706, 680, 730)
+    extracted_sex = id_template_a.crop(sex_box)
 
-        # 5. የተስተካከለውን አዲስ ምስል ሴቭ ማድረግ
-        cv2.imwrite(output_path, template_b)
+    # መ. የሚያበቃበት ቀን መቁረጥ (ሳጥን 5 - Expiry)
+    expiry_box = (175, 740, 680, 770)
+    extracted_expiry = id_template_a.crop(expiry_box)
 
-        # 6. የተሰራውን መታወቂያ ለተጠቃሚው መላክ
-        with open(output_path, "rb") as final_photo:
-            await update.message.reply_photo(photo=final_photo, caption="✅ እነሆ የተስተካከለው መታወቂያዎ!")
+    # ሠ. የካርድ ቁጥር/FAN (ሳጥን 6 - FAN)
+    fan_box = (335, 777, 720, 836)
+    extracted_fan = id_template_a.crop(fan_box)
 
-        # የሂደት መልዕክቱን ማጥፋት
-        await status_message.delete()
+    # ረ. የተሰጠበት ቀን መቁረጥ (ሳጥን 7 - Date of Issue)
+    issue_box = (891, 336, 953, 700)
+    extracted_issue = id_template_a.crop(issue_box)
 
-    except Exception as e:
-        print(f"Error: {e}")
-        await status_message.edit_text(f"❌ ስህተት አጋጥሟል፦ {str(e)}")
-    
-    finally:
-        # ጊዜያዊ ፋይሎችን ማጽዳት
-        if os.path.exists(input_image_path):
-            os.remove(input_image_path)
-        if os.path.exists(output_path):
-            os.remove(output_path)
 
-def main() -> None:
-    # ቦቱን ማስነሳት
-    application = Application.builder().token(TOKEN).build()
+    # ------------------------------------------------------------------
+    # Step 2: የተቆረጠውን መረጃ Template B ላይ ያስገቡ (PASTING)
+    # መጋጠሚያዎቹ (x, y) ለላይኛው ግራ ጫፍ ናቸው::
+    # ------------------------------------------------------------------
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.PHOTO, process_image))
+    # ሀ. ፎቶውን መለጠፍ (አዲሱ ሳጥን 8 - "ፋይዳ" በታች)
+    # በTemplate B ላይ "FAYDA/ፋይዳ" የሚለው ጽሑፍ በግምት y=600 ላይ ነው::
+    # ፎቶው በ x=745, y=724 አካባቢ እንዲቀመጥ ተደርጓል::
+    new_photo_position = (745, 724)
+    new_template_b.paste(extracted_photo, new_photo_position)
 
-    # Render ላይ እንዲሠራ የፖርት ማስተካከያ
-    port = int(os.environ.get("PORT", 8443))
-    application.run_polling()
+    # ለ. ስም መለጠፍ
+    new_name_position = (410, 290)
+    new_template_b.paste(extracted_name, new_name_position)
 
-if __name__ == "__main__":
-    main()
+    # ሐ. ጾታ መለጠፍ
+    new_sex_position = (410, 560)
+    new_template_b.paste(extracted_sex, new_sex_position)
+
+    # መ. የሚያበቃበት ቀን መለጠፍ
+    new_expiry_position = (410, 668)
+    new_template_b.paste(extracted_expiry, new_expiry_position)
+
+    # ሠ. የካርድ ቁጥር መለጠፍ
+    new_fan_position = (465, 765)
+    new_template_b.paste(extracted_fan, new_fan_position)
+
+    # ረ. የተሰጠበት ቀን መለጠፍ
+    # (በአዲስ ቴምፕሌት y-ዘንግ ላይ 90 ዲግሪ መሽከርከር ሊኖርበት ይችላል::)
+    new_issue_position = (88, 160)
+    new_template_b.paste(extracted_issue, new_issue_position)
+
+    # ------------------------------------------------------------------
+    # Step 3: የመጨረሻውን ውጤት ያስቀምጡ
+    # ------------------------------------------------------------------
+    new_template_b.save(output_path)
+    print(f"ፋይሉ በተሳካ ሁኔታ ተፈጥሯል: {output_path}")
+
+# ------------------------------------------------------------------
+# አጠቃቀም (የፋይል ስሞችን እዚህ ይግለጹ)
+# ------------------------------------------------------------------
+
+# 'image_0.png' እና 'image_1.png' ከዚህ ኮድ ጋር በአንድ ፎልደር ውስጥ መሆን አለባቸው::
+input_id_a = "image_0.png"
+empty_template_b = "image_1.png"
+final_id_output = "Final_Processed_ID.png"
+
+# ተግባሩን ይጥሩ
+process_digital_id(input_id_a, empty_template_b, final_id_output)
