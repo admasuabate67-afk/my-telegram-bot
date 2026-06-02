@@ -5,7 +5,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
 # የቦት ማረጋገጫ ቁጥር (Bot Token)
-TOKEN = "8941497236:AAE-C|4FeJc9nQEZ6tugHRU" # ማስታወሻ፦ እውነተኛውን ቶክንዎን እዚህ ያስገቡ
+TOKEN = "8941497236:AAGMV8X7GYytc2Iv2DHIQUMIogrHh1vzBGE" # ማስታወሻ፦ እውነተኛውን ቶክንዎን እዚህ ያስገቡ
 
 # የባዶ መታወቂያ ምስል መንገድ
 TEMPLATE_B_PATH = "template_b.jpg"
