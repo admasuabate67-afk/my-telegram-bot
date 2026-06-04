@@ -1,71 +1,32 @@
-import logging
+import os
+import asyncio
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, ConversationHandler
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 from PIL import Image
 
-# Token አስገባ
-TOKEN = "8941497236:AAE-C|4FeJc9nQEZ6tugHRUmIABh LCsptdA"
+# ከ @BotFather ያገኘኸው ትክክለኛው የቦት ቶክን (ያለ ምንም ክፍተት)
+TOKEN = "8941497236:AAE-C|4FeJc9nQEZ6tugHRUmIABhLCsptdA"
 
-# የቦት ስቴቶች (የደረጃ መቆጣጠሪያ)
-PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
-
-# Logging ማስተካከያ
-logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
-
-async def start(update: Update, context: CallbackContext) -> int:
+# ተጠቃሚው /start ሲል የሚመጣው መልእክት
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "እንኳን ወደ EFID Convert ቦት በሰላም መጡ! 👋\n\n"
-        "ለመጀመር እባክዎ መጀመሪያ **የባለቤቱን ፎቶ** ይላኩ።"
+        "ሰላም! የ 'Efid Convert Bot' በተሳካ ሁኔታ ተነሥቷል።\n"
+        "ለመቀጠል እባክህ የምትፈልገውን ፋይል ወይም ትዕዛዝ አስገባ።"
     )
-    return PHOTO
 
-async def photo_handler(update: Update, context: CallbackContext) -> int:
-    # ፎቶውን ማውረድ
-    photo_file = await update.message.photo[-1].get_file()
-    await photo_file.download_to_drive('user_photo.jpg')
-    
-    await update.message.reply_text("በጣም ጥሩ! አሁን ደግሞ **ሙሉ ስም** ያስገቡ፡")
-    return NAME
+def main():
+    # አዲሱ የ v20+ አፕሊኬሽን አገነባብ መዋቅር
+    application = ApplicationBuilder().token(TOKEN).build()
 
-async def name_handler(update: Update, context: CallbackContext) -> int:
-    context.user_data['name'] = update.message.text
-    await update.message.reply_text("እባክዎ **ጾታ** ያስገቡ (ወንድ/ሴት)፡")
-    return GENDER
+    # የ /start ኮማንድ አስተናጋጅ መመዝገብ
+    application.add_handler(CommandHandler("start", start))
 
-async def gender_handler(update: Update, context: CallbackContext) -> int:
-    context.user_data['gender'] = update.message.text
-    await update.message.reply_text("እባክዎ **የሚያበቃበት ቀን** ያስገቡ (በኢትዮጵያ ወይም በአውሮፓውያን አቆጣጠር)፡")
-    return EXP_DATE
+    # ቦቱን በ polling ስልት ማስነሳት (የ event loop ችግርን ይፈታል)
+    print("ቦቱ በተሳካ ሁኔታ እየሰራ ነው...")
+    application.run_polling()
 
-async def exp_date_handler(update: Update, context: CallbackContext) -> int:
-    context.user_data['exp_date'] = update.message.text
-    await update.message.reply_text("እባክዎ **የካርድ ቁጥር** ያስገቡ፡")
-    return CARD_NUM
-
-async def card_num_handler(update: Update, context: CallbackContext) -> int:
-    context.user_data['card_num'] = update.message.text
-    await update.message.reply_text("በመጨረሻም **የተሰጠበት ቀን** ያስገቡ፡")
-    return ISSUE_DATE
-
-async def issue_date_handler(update: Update, context: CallbackContext) -> int:
-    context.user_data['issue_date'] = update.message.text
-    await update.message.reply_text("መረጃው እየተዘጋጀ ነው... እባክዎ ጥቂት ሰከንዶችን ይጠብቁ። ⏳")
-    
-    # ፎቶዎችን የማቀናበር ሂደት (Image Processing)
-    try:
-        # Template B ምስልን መክፈት (እዚህ ጋር template_b.png የሚለው ፋይል በኮዱ አጠገብ መኖር አለበት)
-        template_b = Image.open("template_b.png").convert("RGBA")
-        user_photo = Image.open("user_photo.jpg").convert("RGBA")
-        
-        # 📌 የፎቶ መጠን ማስተካከያ (እንደ Template B ቁጥር 8 ቦታ መጠን ይለወጣል)
-        # ለምሳሌ፡ ስፋት 200px፣ ቁመት 250px ካስፈለገ
-        photo_width = 200 
-        photo_height = 250
-        user_photo = user_photo.resize((photo_width, photo_height))
-        
-        # 📌 የፎቶ ማስቀመጫ ቦታ (X እና Y Coordinates)
-        # በTemplate B ላይ "ፋይዳ" ከሚለው ጽሑፍ በታች ቁጥር 8 ያለበትን ቦታ ይለኩና እዚህ ይተኩት
-        x_position = 150  
+if __name__ == "__main__":
+    main()
         y_position = 450  
         
         # ፎቶውን Template B ላይ መለጠፍ
