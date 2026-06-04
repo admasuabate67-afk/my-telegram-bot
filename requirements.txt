@@ -1,2 +1,4 @@
-python-telegram-bot==20.8
-Pillow
+python-telegram-bot==13.15
+apscheduler==3.6.3
+Flask==3.0.3
+gunicorn==22.0.0
