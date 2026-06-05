@@ -13,7 +13,7 @@ from telegram.ext import (
 from PIL import Image
 
 # ያንተ እውነተኛ እና ትኩስ ቦት ቶከን ከ BotFather
-TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
+TOKEN = TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
 
 # የኮንቨርዥን ደረጃዎች (Conversation States)
 PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
