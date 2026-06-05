@@ -1,7 +1,7 @@
 import os
 import asyncio
-from threading import Thread
 from flask import Flask
+from threading import Thread
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
 
@@ -11,15 +11,14 @@ TOKEN = "8041497236:AAE-Cj4FeJc9nQEZ6tug8RUw"
 # የኮንቨርሴሽን ስቴቶች (States)
 PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
 
-# ለ Render መቆያ የሚሆን አነስተኛ የFlask መተግበሪያ
+# ለ Render መቆያ የሚሆን የFlask መተግበሪያ
 app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Bot is alive!"
+    return "Bot is running!"
 
 def run_flask():
-    # Render የሚሰጠውን ፖርት ፈልጎ በዚያ ላይ ሰርቨሩን ያስነሳል
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
@@ -45,12 +44,18 @@ async def cancel(update: Update, context):
     return ConversationHandler.END
 
 def main():
-    # 1. መጀመሪያ የFlask ዌብ ሰርቨሩን በሌላ Thread (ጀርባ) ላይ ማስጀመር
-    flask_thread = Thread(target=run_flask)
-    flask_thread.daemon = True
-    flask_thread.start()
+    # 1. የFlask ሰርቨርን ማስጀመር
+    server_thread = Thread(target=run_flask)
+    server_thread.daemon = True
+    server_thread.start()
 
-    # 2. የቴሌግራም ቦቱን ማዋቀር
+    # 2. የቴሌግራም ቦቱን መገንባት
+    # አዲሱ የፓይተን ስሪት እንዳያቋርጠው loop_policy ማስተካከያ ተጨምሯል
+    try:
+        asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+    except Exception:
+        pass
+
     application = ApplicationBuilder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
@@ -63,9 +68,9 @@ def main():
     
     application.add_handler(conv_handler)
     
-    # 3. ቦቱን በንፅህና ማስጀመር (ይህ በአዲሱ ስሪት አስተማማኙ መንገድ ነው)
-    print("ቦቱ እና ዌብ ሰርቨሩ በተሳካ ሁኔታ እየሰሩ ነው...")
-    application.run_polling(close_loop=False)
+    # 3. ቦቱን በ polling ማስነሳት
+    print("ቦቱ እየጀመረ ነው...")
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
