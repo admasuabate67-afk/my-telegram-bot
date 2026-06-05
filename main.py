@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Template Crop Converter is Running Smoothly!"
+    return "Template ID Converter is Online!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -35,7 +35,7 @@ async def process_image_conversion(update: Update, context):
     template_a_path = f"template_a_{update.message.from_user.id}.jpg"
     await photo_file.download_to_drive(template_a_path)
     
-    await update.message.reply_text("⏳ ምስሉ ደርሷል! መረጃዎችን በትክክል እየቆረጥኩ እና እያቀናጀሁ ነው፣ እባክዎ በትዕግስት ይጠብቁ...")
+    await update.message.reply_text("⏳ ምስሉ ደርሷል! የስክሪንሾት ፍሬሙን አስተካክዬ መረጃዎችን በትክክል እየቆረጥኩ ነው፣ እባክዎ በትዕግስት ይጠብቁ...")
     
     try:
         # 1. ባዶውን Template B መክፈት
@@ -45,48 +45,54 @@ async def process_image_conversion(update: Update, context):
         else:
             template_b = Image.open(template_b_path)
             
-        # 2. ዋናውን Template A ምስል መክፈት
-        img_a = Image.open(template_a_path)
+        # 2. ዋናውን የስክሪንሾት ምስል መክፈት
+        raw_img = Image.open(template_a_path)
         
-        # የፍሬም መዛባትን ለመከላከል ወደ አንድ ወጥ ስታንዳርድ መጠን መቀየር
+        # 🔄 ስልቱ እዚህ ላይ ነው፦ የስልኩን የላይኛው እና የታችኛውን ጥቁር ክፍል ቆርጦ መታወቂያዋን ብቻ ነጥሎ ማውጣት
+        # የስክሪንሾቱን መጠን መጀመሪያ ወጥ እናድርገው
+        raw_img_resized = raw_img.resize((1080, 2400))
+        # መታወቂያዋ የምታርፍበትን ትክክለኛ ቦታ ብቻ መቁረጥ (የስልክ ስታተስ ባሮችን ለማጥፋት)
+        img_a = raw_img_resized.crop((50, 420, 1030, 1820))
+        
+        # አሁን መታወቂያዋ ብቻዋን ስለቀረች ወደ ዋናው መቁረጫ ስታንዳርድ መጠን (1000x1500) እንቀይራታለን
         img_a = img_a.resize((1000, 1500)) 
 
-        # 3. ✂️ የተስተካከሉ የቁረጥ እና የመለጠፍ መጋጠሚያዎች (Coordinates)
+        # 3. ✂️ ፍጹም የተገጣጠሙ የቁረጥ እና የመለጠፍ መጋጠሚያዎች (Coordinates)
 
         # 1️⃣ ፎቶግራፍ (ቁጥር 1)
-        crop_1 = img_a.crop((320, 270, 750, 830))
+        crop_1 = img_a.crop((320, 250, 750, 810))
         crop_1_resized = crop_1.resize((265, 345))
         template_b.paste(crop_1_resized, (138, 132))
         
         # 2️⃣ ሙሉ ስም (ቁጥር 2)
-        crop_2 = img_a.crop((160, 910, 720, 1010))
+        crop_2 = img_a.crop((160, 895, 720, 995))
         crop_2_resized = crop_2.resize((480, 55))
         template_b.paste(crop_2_resized, (415, 145))
         
         # 3️⃣ የትውልድ ቀን (ቁጥር 3)
-        crop_3 = img_a.crop((160, 1050, 720, 1115))
+        crop_3 = img_a.crop((160, 1035, 720, 1100))
         crop_3_resized = crop_3.resize((480, 40))
         template_b.paste(crop_3_resized, (415, 245))
         
         # 4️⃣ ጾታ (ቁጥር 4)
-        crop_4 = img_a.crop((160, 1130, 480, 1195))
+        crop_4 = img_a.crop((160, 1115, 480, 1180))
         crop_4_resized = crop_4.resize((280, 40))
         template_b.paste(crop_4_resized, (415, 320))
         
         # 5️⃣ የሚያበቃበት ቀን (ቁጥር 5)
-        crop_5 = img_a.crop((160, 1210, 720, 1275))
+        crop_5 = img_a.crop((160, 1195, 720, 1260))
         crop_5_resized = crop_5.resize((480, 40))
         template_b.paste(crop_5_resized, (415, 395))
         
         # 6️⃣ የካርድ ቁጥር FAN (ቁጥር 6)
-        crop_6 = img_a.crop((310, 1315, 750, 1415))
+        crop_6 = img_a.crop((310, 1300, 750, 1400))
         crop_6_resized = crop_6.resize((350, 50))
         template_b.paste(crop_6_resized, (460, 485))
         
-        # 7️⃣ የተሰጠበት ቀን (ቁጥር 7) -> 🔄 የነበረውን የኮድ ስህተት ያስተካክላል
-        crop_7 = img_a.crop((915, 350, 955, 950))
+        # 7️⃣ የተሰጠበት ቀን (ቁጥር 7) -> 🔄 በ 90 ዲግሪ ዞሮ በግራ በኩል በቁም
+        crop_7 = img_a.crop((910, 330, 950, 930))
         crop_7_rotated = crop_7.rotate(90, expand=True) 
-        crop_7_resized = crop_7_rotated.resize((35, 310)) # ስህተቱ እዚህ ላይ ተስተካክሏል
+        crop_7_resized = crop_7_rotated.resize((35, 310))
         template_b.paste(crop_7_resized, (75, 145))
 
         # 8️⃣ የTemplate A ሙሉ ምስል በትንሹ (ቁጥር 8)
