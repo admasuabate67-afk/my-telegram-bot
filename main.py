@@ -27,7 +27,7 @@ def main():
 
 if __name__ == "__main__":
     main()
-        y_position = 450  
+    y_position = 450  
         
         # ፎቶውን Template B ላይ መለጠፍ
         template_b.paste(user_photo, (x_position, y_position), user_photo)
