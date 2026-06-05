@@ -5,7 +5,8 @@ from flask import Flask
 from threading import Thread
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ConversationHandler
-
+8819848346:
+AAEtkHmyTau8Kbphaj51BzDECcbS2hFf2-I
 # የፓይተን ስሪት 3.14+ ከሆነ የሚመጣውን የ loop ችግር ለመፍታት
 if sys.version_info >= (3, 12):
     try:
