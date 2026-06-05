@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 
 # 100% ትክክለኛው ቦት ቶከን (በቁጥር 1 እና 0 የተስተካከለ)
-TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
+TOKEN = "8941497236:AAE-Cl4FeJc9nQEZ6tugHRUmIABhLCsptdA"
 
 # የኮንቨርዥን ደረጃዎች (Conversation States)
 PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
