@@ -18,7 +18,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def home():
-    return "Template Crop Converter is Running!"
+    return "Template Crop Converter is Running Smoothly!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 10000))
@@ -41,7 +41,6 @@ async def process_image_conversion(update: Update, context):
         # 1. ባዶውን Template B መክፈት
         template_b_path = "template_b.jpg"
         if not os.path.exists(template_b_path):
-            # ባዶ ምስል ፈጣሪ (ፋይሉ ከጠፋ)
             template_b = Image.new("RGB", (1034, 574), "white")
         else:
             template_b = Image.open(template_b_path)
@@ -49,7 +48,7 @@ async def process_image_conversion(update: Update, context):
         # 2. ዋናውን Template A ምስል መክፈት
         img_a = Image.open(template_a_path)
         
-        # ስክሪንሾቱ ምንም ዓይነት መጠን ቢኖረው መጀመሪያ ወደ አንድ ወጥ ስታንዳርድ መጠን እንቀይረዋለን
+        # የፍሬም መዛባትን ለመከላከል ወደ አንድ ወጥ ስታንዳርድ መጠን መቀየር
         img_a = img_a.resize((1000, 1500)) 
 
         # 3. ✂️ የተስተካከሉ የቁረጥ እና የመለጠፍ መጋጠሚያዎች (Coordinates)
@@ -84,11 +83,10 @@ async def process_image_conversion(update: Update, context):
         crop_6_resized = crop_6.resize((350, 50))
         template_b.paste(crop_6_resized, (460, 485))
         
-        # 7️⃣ የተሰጠበት ቀን (ቁጥር 7) -> 🔄 በ 90 ዲግሪ አዙሮ በቁም ለመለጠፍ
+        # 7️⃣ የተሰጠበት ቀን (ቁጥር 7) -> 🔄 የነበረውን የኮድ ስህተት ያስተካክላል
         crop_7 = img_a.crop((915, 350, 955, 950))
-        crop_7_rotated = crop_7.rotate(90, expand=True) # ፅሁፉን በቁም ያዞረዋል
-        crop_7_resized = crop_7.rotated.resize((35, 310)) if hasattr(crop_7_rotated, 'resize') else crop_7_rotated.resize((35, 310))
-        # በግራ በኩል ባለው ጠባብ ሳጥን ውስጥ ማስገቢያ
+        crop_7_rotated = crop_7.rotate(90, expand=True) 
+        crop_7_resized = crop_7_rotated.resize((35, 310)) # ስህተቱ እዚህ ላይ ተስተካክሏል
         template_b.paste(crop_7_resized, (75, 145))
 
         # 8️⃣ የTemplate A ሙሉ ምስል በትንሹ (ቁጥር 8)
