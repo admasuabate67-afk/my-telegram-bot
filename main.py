@@ -10,10 +10,9 @@ from telegram.ext import (
     filters, 
     ConversationHandler
 )
-from PIL import Image
 
-# ያንተ እውነተኛ እና ትኩስ ቦት ቶከን ከ BotFather
-TOKEN = TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
+# ያንተ እውነተኛ እና ትኩስ ቦት ቶከን
+TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
 
 # የኮንቨርዥን ደረጃዎች (Conversation States)
 PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
@@ -25,7 +24,6 @@ def home():
     return "Bot is alive and running!"
 
 def run_flask():
-    # Render የሚሰጠውን PORT በራስ-ሰር ይወስዳል
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
@@ -37,13 +35,8 @@ async def start(update: Update, context):
     return PHOTO
 
 async def handle_photo(update: Update, context):
-    try:
-        # እዚህ ጋር ለወደፊት የፎቶ ማስተካከያ (Pillow) ኮድህን ማስገባት ትችላለህ
-        await update.message.reply_text("ምስሉ በተሳካ ሁኔታ ደርሶኛል! አሁን ደግሞ ሙሉ ስምህን አስገባ።")
-        return NAME
-    except Exception as e:
-        await update.message.reply_text(f"በፎቶው ላይ ስህተት ተፈጥሯል: {e}")
-        return ConversationHandler.END
+    await update.message.reply_text("ምስሉ በተሳካ ሁኔታ ደርሶኛል! አሁን ደግሞ ሙሉ ስምህን አስገባ።")
+    return NAME
 
 async def handle_name(update: Update, context):
     context.user_data['name'] = update.message.text
@@ -68,7 +61,6 @@ async def handle_exp_date(update: Update, context):
 async def handle_card_num(update: Update, context):
     context.user_data['card_num'] = update.message.text
     
-    # ሁሉንም መረጃዎች ተቀብሎ ሲጨርስ ለተጠቃሚው የሚያሳየው ማጠቃለያ
     summary = (
         "ሁሉም መረጃዎች በተሳካ ሁኔታ ተመዝግበዋል! 🎉\n\n"
         "የመጣው መረጃ ማጠቃለያ፦\n"
@@ -86,15 +78,12 @@ async def cancel(update: Update, context):
     return ConversationHandler.END
 
 def main():
-    # 1. የ Flask ሰርቨርን በጀርባ (Background) በ Thread ማስጀመር
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
-    # 2. የቴሌግራም ቦት መገንባት
     application = ApplicationBuilder().token(TOKEN).build()
     
-    # 3. የውይይት ፍሰቱን (Conversation Handler) መዘርጋት
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -110,7 +99,6 @@ def main():
     
     application.add_handler(conv_handler)
     
-    # 4. ቦቱን በ Polling መንገድ ማነሳሳት
     print("ቦቱ በተሳካ ሁኔታ እየሰራ ነው...")
     application.run_polling()
 
