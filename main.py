@@ -1,14 +1,27 @@
 import os
 import asyncio
+from threading import Thread
+from flask import Flask
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ConversationHandler
-from PIL import Image
 
 # ከ @BotFather ያገኘኸው የቴሌግራም ቦት ቶከን
 TOKEN = "8041497236:AAE-Cj4FeJc9nQEZ6tug8RUw"
 
 # የኮንቨርሴሽን ስቴቶች (States)
 PHOTO, NAME, GENDER, EXP_DATE, CARD_NUM, ISSUE_DATE = range(6)
+
+# ለ Render መቆያ የሚሆን አነስተኛ የFlask መተግበሪያ
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Bot is alive!"
+
+def run_flask():
+    # Render የሚሰጠውን ፖርት ፈልጎ በዚያ ላይ ሰርቨሩን ያስነሳል
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
 
 # ተጠቃሚው /start ሲል የሚመጣው መልዕክት
 async def start(update: Update, context):
@@ -31,11 +44,15 @@ async def cancel(update: Update, context):
     await update.message.reply_text("ክዋኔው ተሰርዟል።")
     return ConversationHandler.END
 
-async def main_async():
-    # ቦቱን ማዘጋጀት
+def main():
+    # 1. መጀመሪያ የFlask ዌብ ሰርቨሩን በሌላ Thread (ጀርባ) ላይ ማስጀመር
+    flask_thread = Thread(target=run_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+
+    # 2. የቴሌግራም ቦቱን ማዋቀር
     application = ApplicationBuilder().token(TOKEN).build()
     
-    # የኮንቨርሴሽን ማስተናገጃ (Conversation Handler)
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler('start', start)],
         states={
@@ -46,24 +63,9 @@ async def main_async():
     
     application.add_handler(conv_handler)
     
-    # ቦቱን ማስተናገጃ መጀመር
-    print("ቦቱ በተሳካ ሁኔታ እየሰራ ነው...")
-    await application.initialize()
-    await application.start()
-    await application.updater.start_polling()
-    
-    # ቦቱ ሳይጠፋ እንዲቆይ ማድረግ
-    while True:
-        await asyncio.sleep(1)
-
-def main():
-    # የ Event Loop ስህተትን የሚፈታው ዋናው መስመር
-    try:
-        asyncio.run(main_async())
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(main_async())
+    # 3. ቦቱን በንፅህና ማስጀመር (ይህ በአዲሱ ስሪት አስተማማኙ መንገድ ነው)
+    print("ቦቱ እና ዌብ ሰርቨሩ በተሳካ ሁኔታ እየሰሩ ነው...")
+    application.run_polling(close_loop=False)
 
 if __name__ == "__main__":
     main()
