@@ -11,7 +11,7 @@ from telegram.ext import (
     ConversationHandler
 )
 
-# ያንተ እውነተኛ እና ትኩስ ቦት ቶከን
+# 100% ትክክለኛው ቦት ቶከን (በቁጥር 1 እና 0 የተስተካከለ)
 TOKEN = "8819848346:AAFA9M0La0b1WowDx-2m4eK7YoO50U_Xfig"
 
 # የኮንቨርዥን ደረጃዎች (Conversation States)
@@ -78,10 +78,12 @@ async def cancel(update: Update, context):
     return ConversationHandler.END
 
 def main():
+    # የFlask ሰርቨርን በጀርባ ማስጀመር (Render እንዳይዘጋው)
     flask_thread = Thread(target=run_flask)
     flask_thread.daemon = True
     flask_thread.start()
 
+    # ቦቱን መገንባት
     application = ApplicationBuilder().token(TOKEN).build()
     
     conv_handler = ConversationHandler(
@@ -99,7 +101,7 @@ def main():
     
     application.add_handler(conv_handler)
     
-    print("ቦቱ በተሳካ ሁኔታ እየሰራ ነው...")
+    print("ቦቱ እየተነሳ ነው...")
     application.run_polling()
 
 if __name__ == "__main__":
